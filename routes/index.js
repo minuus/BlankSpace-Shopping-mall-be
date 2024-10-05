@@ -7,6 +7,8 @@ const cartApi = require("./cart.api");
 const orderApi = require("./order.api");
 const collectionApi = require("./collection.api");
 //const shopApi = require("./shop.api");
+const noticeApi = require("./notice.api");
+const qnaApi = require("./qna.api");
 
 router.use("/user", userApi);
 router.use("/auth", authApi);
@@ -14,6 +16,9 @@ router.use("/product", productApi);
 router.use("/cart", cartApi);
 router.use("/order", orderApi);
 router.use("/collection", collectionApi);
+router.use("/notices", noticeApi);
+router.use("/qna", qnaApi);
+
 //router.use("/shop", shopApi);
 
 module.exports = router;

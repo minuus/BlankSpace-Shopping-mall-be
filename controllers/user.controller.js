@@ -36,4 +36,12 @@ userController.getUser = async (req, res) => {
     res.status(400).json({ status: "error", error: error.message });
   }
 };
+userController.getUsers = async (req, res) => {
+  try {
+    const users = await User.find(); // 모든 사용자를 가져옵니다.
+    return res.status(200).json(users);
+  } catch (error) {
+    return res.status(500).json({ status: "error", error: error.message });
+  }
+};
 module.exports = userController;

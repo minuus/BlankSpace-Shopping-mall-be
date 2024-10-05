@@ -79,7 +79,6 @@ authController.loginWithGoogle = async (req, res) => {
     res.status(200).json({ status: "success", user, token: sessionToken });
   } catch (error) {
     res.status(400).json({ status: "fail", error: error.message });
-    console.log("aaaa")
   }
 };
 module.exports = authController;

@@ -36,7 +36,7 @@ productController.createProduct = async (req, res) => {
 
 productController.getProducts = async (req, res) => {
   try {
-    const { page = 1, name } = req.query; // 기본 페이지 값 설정
+    const { page, name } = req.query; // 기본 페이지 값 설정
     let response = { status: "success" };
 
     // 검색 조건 설정

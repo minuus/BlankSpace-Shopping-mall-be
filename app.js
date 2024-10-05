@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json()); // req.body가 객체로 인식이 됩니다
 app.use("/api", indexRouter);
 
-// /api/user
+
 
 // 정적 파일 서빙 설정
 app.use(express.static(path.join(__dirname, 'public')));
