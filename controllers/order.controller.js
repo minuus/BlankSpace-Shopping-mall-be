@@ -42,8 +42,46 @@ orderController.createOrder = async (req, res) => {
 orderController.getOrder = async (req, res, next) => {
   try {
     const { userId } = req;
+    const { dateFilter, statusFilter } = req.query; // statusFilter와 dateFilter 받아오기
 
-    const orderList = await Order.find({ userId: userId }).populate({
+    const now = new Date();
+    let startDate = null;
+
+    // 날짜 필터 처리
+    switch (dateFilter) {
+      case "today":
+        startDate = new Date(now.setHours(0, 0, 0, 0)); // 오늘 00:00
+        break;
+      case "1month":
+        startDate = new Date(now.setMonth(now.getMonth() - 1)); // 1개월 전
+        break;
+      case "3months":
+        startDate = new Date(now.setMonth(now.getMonth() - 3)); // 3개월 전
+        break;
+      case "6months":
+        startDate = new Date(now.setMonth(now.getMonth() - 6)); // 6개월 전
+        break;
+      case "all":
+      default:
+        startDate = null; // 전체 기간
+        break;
+    }
+
+    // 조건 객체 생성
+    const filterConditions = { userId }; // 사용자 ID는 기본 조건
+
+    // 상태 필터 처리
+    if (statusFilter && statusFilter !== "all") {
+      filterConditions.status = statusFilter; // 상태 필터 추가
+    }
+
+    // 날짜 필터 추가
+    if (startDate) {
+      filterConditions.createdAt = { $gte: startDate };
+    }
+
+    // 주문 목록 쿼리
+    const orderList = await Order.find(filterConditions).populate({
       path: "items",
       populate: {
         path: "productId",
@@ -51,12 +89,13 @@ orderController.getOrder = async (req, res, next) => {
         select: "image name",
       },
     });
-    const totalItemNum = await Order.countDocuments({ userId: userId });
 
+    const totalItemNum = await Order.countDocuments(filterConditions);
     const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+
     res.status(200).json({ status: "success", data: orderList, totalPageNum });
   } catch (error) {
-    return res.status(400).json({ status: "fail", error: error.message });
+    res.status(400).json({ status: "fail", error: error.message });
   }
 };
 

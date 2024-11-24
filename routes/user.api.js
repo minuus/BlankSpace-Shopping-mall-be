@@ -10,7 +10,8 @@ const authController = require("../controllers/auth.controller");
 router.post("/", userController.createUser);
 router.get("/me", authController.authenticate, userController.getUser); // 토큰이 valid한 토큰인지, 이 token 가지고 유저를 찾아서 리턴 (미들웨어,체인)
 router.get("/",userController.getUsers);
-
+router.delete("/delete", authController.authenticate, userController.deleteUser);
+router.put("/update", authController.authenticate, userController.updateUserInfo);
 
 router.put("/:id", async (req, res) => {
     console.log("요청 받은 ID:", req.params.id);
