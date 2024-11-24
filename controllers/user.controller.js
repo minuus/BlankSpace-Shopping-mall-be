@@ -45,3 +45,4 @@ userController.getUsers = async (req, res) => {
   }
 };
 module.exports = userController;
+

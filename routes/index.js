@@ -9,7 +9,10 @@ const collectionApi = require("./collection.api");
 //const shopApi = require("./shop.api");
 const noticeApi = require("./notice.api");
 const qnaApi = require("./qna.api");
+const userRouter = require("./user.api"); // user 라우터 가져오기(추가)
 
+// 라우터 연결
+router.use("/users", userRouter); // '/api/users' 경로로 userRouter 연(추가)
 router.use("/user", userApi);
 router.use("/auth", authApi);
 router.use("/product", productApi);
