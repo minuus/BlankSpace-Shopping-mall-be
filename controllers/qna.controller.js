@@ -75,8 +75,12 @@ qnaController.getQnAs = async (req, res) => {
       .sort({ _id: -1 })
       .exec();
 
+    const adminQnaList = await QnA.find({})
+      .exec();
+
     // 응답 생성
     response.data = qnaList;           // 데이터 배열
+    response.adminData = adminQnaList;           // 데이터 배열
     response.totalPageNum = totalPageNum; // 전체 페이지 수
     response.currentPage = Number(page);  // 현재 페이지
     response.totalItemNum = totalItemNum; // 총 항목 수
