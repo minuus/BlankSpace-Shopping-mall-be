@@ -88,6 +88,7 @@ orderController.getOrder = async (req, res, next) => {
         model: "Product",
         select: "image name",
       },
+
     });
 
     const totalItemNum = await Order.countDocuments(filterConditions);
@@ -99,9 +100,41 @@ orderController.getOrder = async (req, res, next) => {
   }
 };
 
+// orderController.getOrderList = async (req, res, next) => {
+//   try {
+//     const { page, orderNum } = req.query;
+
+//     let cond = {};
+//     if (orderNum) {
+//       cond = {
+//         orderNum: { $regex: orderNum, $options: "i" },
+//       };
+//     }
+
+//     const orderList = await Order.find(cond)
+//       .populate("userId")
+//       .populate({
+//         path: "items",
+//         populate: {
+//           path: "productId",
+//           model: "Product",
+//           select: "image name",
+//         },
+//       })
+//       .skip((page - 1) * PAGE_SIZE)
+//       .limit(PAGE_SIZE);
+//     const totalItemNum = await Order.countDocuments(cond);
+
+//     const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+//     res.status(200).json({ status: "success", data: orderList, totalPageNum });
+//   } catch (error) {
+//     return res.status(400).json({ status: "fail", error: error.message });
+//   }
+// };
+
 orderController.getOrderList = async (req, res, next) => {
   try {
-    const { page, orderNum } = req.query;
+    const { page, orderNum, all } = req.query;
 
     let cond = {};
     if (orderNum) {
@@ -110,6 +143,28 @@ orderController.getOrderList = async (req, res, next) => {
       };
     }
 
+    if (all === "true") {
+      // 모든 데이터를 가져오는 경우
+      const orderList = await Order.find(cond)
+        .populate("userId")
+        .populate({
+          path: "items",
+          populate: {
+            path: "productId",
+            model: "Product",
+            select: "image name",
+          },
+        });
+
+      return res.status(200).json({
+        status: "success",
+        data: orderList,
+        totalPageNum: null, // 모든 데이터 요청 시 페이지 수는 null
+      });
+    }
+
+    // 페이지네이션이 있는 경우
+    const PAGE_SIZE = 5;
     const orderList = await Order.find(cond)
       .populate("userId")
       .populate({
@@ -122,14 +177,20 @@ orderController.getOrderList = async (req, res, next) => {
       })
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE);
-    const totalItemNum = await Order.countDocuments(cond);
 
+    const totalItemNum = await Order.countDocuments(cond);
     const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
-    res.status(200).json({ status: "success", data: orderList, totalPageNum });
+
+    res.status(200).json({
+      status: "success",
+      data: orderList,
+      totalPageNum,
+    });
   } catch (error) {
     return res.status(400).json({ status: "fail", error: error.message });
   }
 };
+
 
 orderController.updateOrder = async (req, res, next) => {
   try {
