@@ -2,6 +2,12 @@ const Product = require("../models/Product");
 
 const PAGE_SIZE = 5;
 const productController = {};
+const filterByCategory = (category) => {
+  if (category) {
+    return { category: { $in: [category] } }; // 카테고리 배열에서 검색
+  }
+  return {};
+};
 
 productController.createProduct = async (req, res) => {
   try {
@@ -15,6 +21,9 @@ productController.createProduct = async (req, res) => {
       price,
       stock,
       status,
+      height,
+      weight,
+      washMethods,
     } = req.body;
     const product = new Product({
       sku,
@@ -26,6 +35,9 @@ productController.createProduct = async (req, res) => {
       price,
       stock,
       status,
+      height,
+      weight,
+      washMethods,
     });
     await product.save();
     res.status(200).json({ status: "success", product });
@@ -36,7 +48,7 @@ productController.createProduct = async (req, res) => {
 
 productController.getProducts = async (req, res) => {
   try {
-    const { page, name } = req.query; // 기본 페이지 값 설정
+    const { page = 1, name , category } = req.query; // 기본 페이지 값 설정
     let response = { status: "success" };
 
     // 검색 조건 설정
@@ -55,6 +67,21 @@ productController.getProducts = async (req, res) => {
       response.totalPageNum = totalPageNum;
     }
 
+    // 이름 검색 조건 추가 (이름이 입력된 경우)
+    if (name) {
+      cond = {
+        ...cond,
+        name: { $regex: name, $options: "i" }, // 대소문자 구분 없이 이름 검색
+      };
+    }
+
+    // 카테고리 필터 추가 (카테고리가 입력된 경우)
+    if (category) {
+      cond = {
+        ...cond,
+        category: category, // 선택된 카테고리로 필터링
+      };
+    }
     // 쿼리 실행
     const productList = await query.exec();
     response.data = productList;
@@ -94,11 +121,15 @@ productController.updateProduct = async (req, res) => {
       category,
       stock,
       status,
+      height,
+      weight,
+      washMethods,
     } = req.body;
 
     const product = await Product.findByIdAndUpdate(
       { _id: productId },
-      { sku, name, size, image, price, description, category, stock, status },
+      { sku, name, size, image, price, description, category, stock, status ,height,
+        weight,washMethods,},
       { new: true }
     );
     if (!product) throw new Error("Item doesn't exist");
