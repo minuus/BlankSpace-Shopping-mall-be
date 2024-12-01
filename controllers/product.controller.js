@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
 
-const PAGE_SIZE = 5;
+let PAGE_SIZE = 16;
 const productController = {};
 const filterByCategory = (category) => {
   if (category) {
@@ -48,7 +48,13 @@ productController.createProduct = async (req, res) => {
 
 productController.getProducts = async (req, res) => {
   try {
-    const { page = 1, name , category } = req.query; // 기본 페이지 값 설정
+    const { page = 1, name , category, admin=0 } = req.query; // 기본 페이지 값 설정
+    if (admin == 1) {
+      PAGE_SIZE = 5;
+    } else {
+      PAGE_SIZE = 16;
+    }
+
     let response = { status: "success" };
 
     // 검색 조건 설정
@@ -58,6 +64,7 @@ productController.getProducts = async (req, res) => {
 
     // 쿼리 생성
     let query = Product.find(cond);
+    let queryShop = Product.find({});
 
     // 페이지네이션 적용
     if (page) {
@@ -84,6 +91,7 @@ productController.getProducts = async (req, res) => {
     }
     // 쿼리 실행
     const productList = await query.exec();
+    const productShopList = await queryShop.exec();
     response.data = productList;
 
     // 성공 응답
