@@ -4,13 +4,21 @@ const productSchema = Schema(
   {
     sku: { type: String, required: true, unique: true },
     name: { type: String, required: true },
-    image: { type: [String], required: true },
+    image: { type: Array, required: true },
     category: { type: Array, required: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
     stock: { type: Object, required: true },
+    height: { type: Number, required: true },
+    weight: { type: Number, required: true }, 
     status: { type: String, default: "active" },
     isDeleted: { type: Boolean, default: false },
+    washMethods: [
+      {
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+      },
+    ],
   },
   { timestamps: true }
 );
