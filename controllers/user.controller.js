@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-
+const productController = require("../controllers/product.controller"); // productController 가져오기
 const userController = {};
 
 userController.createUser = async (req, res) => {
@@ -127,9 +127,92 @@ userController.updateUserInfo = async (req, res) => {
   }
 };
 
+userController.addToWishlist = async (req, res) => {
+  try {
+    const { userId } = req; // auth 미들웨어에서 추가된 userId
+    const { productId } = req.body;
 
+    // 요청이 잘못된 경우
+    if (!productId) {
+      return res.status(400).json({ status: "fail", error: "productId 필드가 없습니다." });
+    }
 
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ status: "fail", error: "User not found" });
+    }
 
+    // wishlist에 중복된 productId가 있는지 확인
+    const wishlistIndex = user.wishlist.indexOf(productId);
+    if (wishlistIndex === -1) {
+      // productId가 없으면 추가
+      user.wishlist.push(productId);
+    } else {
+      // productId가 이미 있으면 제거
+      user.wishlist.splice(wishlistIndex, 1);
+    }
+
+    await user.save();
+
+    return res.status(200).json({ status: "success", wishlist: user.wishlist });
+  } catch (error) {
+    return res.status(500).json({ status: "error", error: error.message });
+  }
+};
+
+// userController.getWishlistProducts = async (req, res) => {
+//   try {
+//     const { userId } = req; // auth 미들웨어에서 설정된 userId
+//     const user = await User.findById(userId);
+    
+//     if (!user) {
+//       return res.status(404).json({ status: "fail", error: "User not found" });
+//     }
+
+//     const wishlistIds = user.wishlist;
+//     if (!wishlistIds || wishlistIds.length === 0) {
+//       return res.status(200).json({ products: [] }); // 위시리스트가 비어있으면 빈 배열 반환
+//     }
+
+//     // 제품 ID 배열을 사용하여 제품 정보 가져오기
+//     const products = await Product.find({ _id: { $in: wishlistIds } });
+
+//     return res.status(200).json({ status: "success", products });
+//   } catch (error) {
+//     console.error("Error fetching wishlist products:", error);
+//     return res.status(500).json({ status: "error", error: error.message });
+//   }
+// };
+
+userController.getWishlistProducts = async (req, res) => {
+  try {
+    const { userId } = req; // auth 미들웨어에서 설정된 userId
+    console.log("사용자 ID:", userId); // 사용자 ID 확인
+
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("사용자를 찾을 수 없습니다.");
+      return res.status(404).json({ status: "fail", error: "User not found" });
+    }
+
+    const wishlistIds = user.wishlist;
+    console.log("위시리스트 제품 ID들:", wishlistIds); // 위시리스트 ID 로그 출력
+
+    if (!wishlistIds || wishlistIds.length === 0) {
+      console.log("위시리스트가 비어있습니다.");
+      return res.status(200).json({ products: [] }); // 위시리스트가 비어있으면 빈 배열 반환
+    }
+
+    // productController를 사용하여 제품 정보 가져오기
+    const products = await productController.getProductsByIds(wishlistIds);
+    console.log("찾은 제품들:", products); // 찾은 제품 로그 출력
+
+    return res.status(200).json({ status: "success", products });
+  } catch (error) {
+    console.error("위시리스트 제품을 가져오는 중 오류 발생:", error);
+    return res.status(500).json({ status: "error", error: error.message });
+  }
+};
 
 module.exports = userController;
 

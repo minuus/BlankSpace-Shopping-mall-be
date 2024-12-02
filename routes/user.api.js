@@ -12,6 +12,8 @@ router.get("/me", authController.authenticate, userController.getUser); // 토�
 router.get("/",userController.getUsers);
 router.delete("/delete", authController.authenticate, userController.deleteUser);
 router.put("/update", authController.authenticate, userController.updateUserInfo);
+router.post("/:id/wishlist", authController.authenticate, userController.addToWishlist);
+router.post("/wishlist/products", authController.authenticate, userController.getWishlistProducts);
 
 router.put("/:id", async (req, res) => {
     console.log("요청 받은 ID:", req.params.id);

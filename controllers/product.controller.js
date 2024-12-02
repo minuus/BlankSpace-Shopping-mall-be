@@ -197,4 +197,14 @@ productController.checkItemListStock = async (itemList) => {
   return insufficientStockItems;
 };
 
+productController.getProductsByIds = async (productIds) => {
+  try {
+    const products = await Product.find({ _id: { $in: productIds } });
+    return products;
+  } catch (error) {
+    console.error("제품을 가져오는 중 오류 발생:", error.message);
+    throw new Error("Error fetching products by IDs");
+  }
+};
+
 module.exports = productController;
