@@ -9,6 +9,10 @@ const userSchema = Schema(
     password: { type: String, required: true },
     name: { type: String, required: true },
     level: { type: String, default: "customer" }, // 2types: customer, admin
+    wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }], // Product의 _id 참조
+    mileage: { type: Number, default: 0 }, // 숫자 속성, 기본값 0
+    membership: { type: String, default: "bronze" }, // 문자열 속성, 기본값 bronze
+    totalPayment: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
