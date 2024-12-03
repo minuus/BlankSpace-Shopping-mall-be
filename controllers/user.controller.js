@@ -187,29 +187,23 @@ userController.addToWishlist = async (req, res) => {
 userController.getWishlistProducts = async (req, res) => {
   try {
     const { userId } = req; // auth 미들웨어에서 설정된 userId
-    console.log("사용자 ID:", userId); // 사용자 ID 확인
 
     const user = await User.findById(userId);
     if (!user) {
-      console.error("사용자를 찾을 수 없습니다.");
       return res.status(404).json({ status: "fail", error: "User not found" });
     }
 
     const wishlistIds = user.wishlist;
-    console.log("위시리스트 제품 ID들:", wishlistIds); // 위시리스트 ID 로그 출력
-
     if (!wishlistIds || wishlistIds.length === 0) {
-      console.log("위시리스트가 비어있습니다.");
       return res.status(200).json({ products: [] }); // 위시리스트가 비어있으면 빈 배열 반환
     }
 
     // productController를 사용하여 제품 정보 가져오기
     const products = await productController.getProductsByIds(wishlistIds);
-    console.log("찾은 제품들:", products); // 찾은 제품 로그 출력
+  
 
     return res.status(200).json({ status: "success", products });
   } catch (error) {
-    console.error("위시리스트 제품을 가져오는 중 오류 발생:", error);
     return res.status(500).json({ status: "error", error: error.message });
   }
 };

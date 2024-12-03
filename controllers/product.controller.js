@@ -46,35 +46,73 @@ productController.createProduct = async (req, res) => {
   }
 };
 
+// productController.getProducts = async (req, res) => {
+//   try {
+//     const { page = 1, name , category, admin=0 } = req.query; // 기본 페이지 값 설정
+//     if (admin == 1) {
+//       PAGE_SIZE = 5;
+//     } else {
+//       PAGE_SIZE = 16;
+//     }
+
+//     let response = { status: "success" };
+
+//     // 검색 조건 설정
+//     const cond = name
+//       ? { name: { $regex: name, $options: "i" }, isDeleted: false }
+//       : { isDeleted: false };
+
+//     // 쿼리 생성
+//     let query = Product.find(cond);
+//     let queryShop = Product.find({});
+
+//     // 페이지네이션 적용
+//     if (page) {
+//       query = query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
+//       const totalItemNum = await Product.find(cond).countDocuments();
+//       const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+//       response.totalPageNum = totalPageNum;
+//     }
+
+//     // 이름 검색 조건 추가 (이름이 입력된 경우)
+//     if (name) {
+//       cond = {
+//         ...cond,
+//         name: { $regex: name, $options: "i" }, // 대소문자 구분 없이 이름 검색
+//       };
+//     }
+
+//     // 카테고리 필터 추가 (카테고리가 입력된 경우)
+//     if (category) {
+//       cond = {
+//         ...cond,
+//         category: category, // 선택된 카테고리로 필터링
+//       };
+//     }
+//     // 쿼리 실행
+//     const productList = await query.exec();
+//     const productShopList = await queryShop.exec();
+//     response.data = productList;
+
+//     // 성공 응답
+//     res.status(200).json(response);
+//   } catch (error) {
+//     // 오류 응답
+//     return res.status(400).json({ status: "fail", error: error.message });
+//   }
+// };
+
+
 productController.getProducts = async (req, res) => {
   try {
-    const { page = 1, name , category, admin=0 } = req.query; // 기본 페이지 값 설정
-    if (admin == 1) {
-      PAGE_SIZE = 5;
-    } else {
-      PAGE_SIZE = 16;
-    }
+    const { page = 1, name, category, admin = 0 } = req.query; // 기본 페이지 값 설정
+    PAGE_SIZE = admin == 1 ? 5 : 16;
 
     let response = { status: "success" };
 
     // 검색 조건 설정
-    const cond = name
-      ? { name: { $regex: name, $options: "i" }, isDeleted: false }
-      : { isDeleted: false };
+    let cond = { isDeleted: false };
 
-    // 쿼리 생성
-    let query = Product.find(cond);
-    let queryShop = Product.find({});
-
-    // 페이지네이션 적용
-    if (page) {
-      query = query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
-      const totalItemNum = await Product.find(cond).countDocuments();
-      const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
-      response.totalPageNum = totalPageNum;
-    }
-
-    // 이름 검색 조건 추가 (이름이 입력된 경우)
     if (name) {
       cond = {
         ...cond,
@@ -82,16 +120,23 @@ productController.getProducts = async (req, res) => {
       };
     }
 
-    // 카테고리 필터 추가 (카테고리가 입력된 경우)
     if (category) {
       cond = {
         ...cond,
         category: category, // 선택된 카테고리로 필터링
       };
     }
+
+    // 쿼리 생성 및 페이지네이션 적용
+    let query = Product.find(cond)
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE);
+    const totalItemNum = await Product.countDocuments(cond);
+    const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+    response.totalPageNum = totalPageNum;
+
     // 쿼리 실행
     const productList = await query.exec();
-    const productShopList = await queryShop.exec();
     response.data = productList;
 
     // 성공 응답
@@ -101,6 +146,8 @@ productController.getProducts = async (req, res) => {
     return res.status(400).json({ status: "fail", error: error.message });
   }
 };
+
+
 
 productController.deleteProduct = async (req, res) => {
   try {
