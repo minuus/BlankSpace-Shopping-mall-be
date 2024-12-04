@@ -1,5 +1,6 @@
 const orderController = {};
 const Order = require("../models/Order");
+const User = require("../models/User");
 const productController = require("./product.controller");
 const { randomStringGenerator } = require("../utils/randomStringGenerator");
 const PAGE_SIZE = 5;
@@ -32,6 +33,18 @@ orderController.createOrder = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // 마일리지 적립
+    const mileageToAdd = Math.floor(totalPrice * 0.05); // 소수점 제거
+    await User.updateOne(
+      { _id: userId }, // 조건: 해당 유저 ID
+      { $inc: { mileage: mileageToAdd } } // mileage 필드에 적립금 추가
+    );
+    await User.updateOne(
+      { _id: userId }, // 조건: 해당 유저 ID
+      { $inc: { mileage: mileageToAdd } } // mileage 필드에 적립금 추가
+    );
+
     // save 후에 카트를 비워주자
     res.status(200).json({ status: "success", orderNum: newOrder.orderNum });
   } catch (error) {
