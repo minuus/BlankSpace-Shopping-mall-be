@@ -8,6 +8,8 @@ const orderSchema = Schema(
     userId: { type: mongoose.ObjectId, ref: User, required: true },
     status: { type: String, default: "preparing" },
     totalPrice: { type: Number, required: true, default: 0 },
+    useMileage: { type: Number, default: 0 },
+    lastPrice: { type: Number, required: true, default: 0 },
     shipTo: { type: Object, required: true },
     contact: { type: Object, required: true },
     orderNum: { type: String },
@@ -19,6 +21,7 @@ const orderSchema = Schema(
         size: { type: String, required: true },
       },
     ],
+    isReviewed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

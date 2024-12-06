@@ -14,46 +14,46 @@ exports.getNoticeById = async (req, res) => {
     }
 };
 
+
+
 exports.getAllNotices = async (req, res) => {
     try {
-        const { searchType, keyword, page = 1 } = req.query; // Extract searchType, keyword, and page from query
-        const limit = 10; // Number of items per page
-        const skip = (parseInt(page) - 1) * limit; // Calculate number of items to skip for pagination
+        const { searchType, keyword, page = 1 } = req.query;
+        const limit = 10;
+        const skip = (parseInt(page) - 1) * limit;
 
-        // Construct the search filter
         let filter = {};
 
         if (keyword) {
             if (searchType === 'title') {
-                filter.title = { $regex: keyword, $options: 'i' }; // Search by title
+                filter.title = { $regex: keyword, $options: 'i' };
             } else if (searchType === 'content') {
-                filter.content = { $regex: keyword, $options: 'i' }; // Search by content
+                filter.content = { $regex: keyword, $options: 'i' };
             } else if (searchType === 'title+content') {
                 filter.$or = [
-                    { title: { $regex: keyword, $options: 'i' } }, // Search by title OR content
-                    { content: { $regex: keyword, $options: 'i' } }
+                    { title: { $regex: keyword, $options: 'i' } },
+                    { content: { $regex: keyword, $options: 'i' } },
                 ];
             }
         }
 
-        // Fetch notices based on the filter, with pagination
         const [notices, total] = await Promise.all([
-            Notices.find(filter).skip(skip).limit(limit), // Apply filter, skip and limit for pagination
-            Notices.countDocuments(filter) // Get total count based on the filter
+            Notices.find(filter).skip(skip).limit(limit),
+            Notices.countDocuments(filter),
         ]);
 
-        const totalPages = Math.ceil(total / limit); // Calculate total number of pages
+        const totalPages = Math.ceil(total / limit);
 
-        // Return the notices, total page number, and current page
         return res.json({
             notices,
             totalPageNum: totalPages,
-            currentPage: parseInt(page)
+            currentPage: parseInt(page),
         });
     } catch (err) {
-        return handleError(res, err);
+        return handleError(res, err); // 이미 응답이 완료된 경우 추가 응답 시도
     }
 };
+
 
 
 

@@ -1,13 +1,30 @@
 const orderController = {};
 const Order = require("../models/Order");
+const User = require("../models/User");
 const productController = require("./product.controller");
 const { randomStringGenerator } = require("../utils/randomStringGenerator");
 const PAGE_SIZE = 5;
+
+const membershipMileageRates = {
+  bronze: 0.01, // 1%
+  silver: 0.02, // 2%
+  gold: 0.03, // 3$
+  platinum: 0.04, // 4%
+  diamond: 0.05, // 5%
+};
+
 orderController.createOrder = async (req, res) => {
   try {
     // 프론트앤드에서 데이터 보낸거 받아와서 userId,totalPrice,shipTo,contact,orderList
     const { userId } = req;
-    const { shipTo, contact, totalPrice, orderList } = req.body;
+    const {
+      shipTo,
+      contact,
+      totalPrice,
+      useMileage,
+      currentMileage,
+      orderList,
+    } = req.body;
     // 재고 확인 & 재고 업데이트
     const insufficientStockItems = await productController.checkItemListStock(
       orderList
@@ -21,10 +38,20 @@ orderController.createOrder = async (req, res) => {
       throw new Error(errorMessage);
     }
 
+    const user = await User.findById(userId).select("membership mileage");
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const { membership, mileage: userMileage } = user;
+
+    const lastPrice = totalPrice - useMileage;
     // order를 만들기
     const newOrder = new Order({
       userId,
       totalPrice,
+      useMileage,
+      lastPrice,
       shipTo,
       contact,
       items: orderList,
@@ -32,6 +59,22 @@ orderController.createOrder = async (req, res) => {
     });
 
     await newOrder.save();
+    // 마일리지 적립
+    if (useMileage == 0) {
+      const mileageRate = membershipMileageRates[membership] || 0.01; // 기본값 bronze
+      const mileageToAdd = Math.floor(totalPrice * mileageRate); // 소수점 제거
+      await User.updateOne(
+        { _id: userId },
+        { $inc: { mileage: mileageToAdd } } // 마일리지 적립
+      );
+    } else if (useMileage != 0) {
+      const afterMileage = currentMileage - useMileage;
+      await User.updateOne(
+        { _id: userId }, // 조건: 해당 유저 ID
+        { $set: { mileage: afterMileage }, $inc: { usedMileage: useMileage } } // mileage 필드에 적립금 추가
+      );
+    }
+
     // save 후에 카트를 비워주자
     res.status(200).json({ status: "success", orderNum: newOrder.orderNum });
   } catch (error) {
@@ -88,7 +131,6 @@ orderController.getOrder = async (req, res, next) => {
         model: "Product",
         select: "image name",
       },
-
     });
 
     const totalItemNum = await Order.countDocuments(filterConditions);
@@ -190,7 +232,6 @@ orderController.getOrderList = async (req, res, next) => {
     return res.status(400).json({ status: "fail", error: error.message });
   }
 };
-
 
 orderController.updateOrder = async (req, res, next) => {
   try {

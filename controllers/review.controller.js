@@ -1,33 +1,9 @@
-
-
 // review.controller.js
+
 const Review = require('../models/Review');
+const Order = require("../models/Order"); // Order 모델 가져오기
 
-//createReview로 리뷰생성해줌(저장)
-exports.createReview = async (req, res) => {
-  try {
-    const { productId, rating, text } = req.body; //리뷰데이터 3가지
-    const image = req.file ? req.file.path : null; //이미지 업로드
 
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
-    }
-
-    const newReview = new Review({
-      productId,
-      rating,
-      text,
-      image,
-    });
-
-    await newReview.save();
-    res.status(201).json(newReview);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-//리뷰조회기능임
 exports.getReviews = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -53,32 +29,42 @@ exports.deleteReview = async (req, res) => {
 //에러 점검코드 추가함.
 exports.createReview = async (req, res) => {
   try {
-    console.log('Received data:', req.body);
-    console.log('Received file:', req.file);
+    // console.log("Received data:", req.body);
 
-    const { productId, rating, text } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : null;
+    const { productId, rating, text, name, orderId } = req.body;
 
-    // 데이터 형식 점검: rating을 숫자로 변환
+    // 유효성 검사
     const parsedRating = parseInt(rating, 10);
     if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
     }
 
+    // 리뷰 생성
     const newReview = new Review({
       productId,
       rating: parsedRating,
       text,
-      image,
+      name,
     });
-
     await newReview.save();
-    console.log('Review saved:', newReview); // 데이터베이스에 저장된 리뷰 로그 추가
+
+    // console.log("Review saved:", newReview);
+
+    // 해당 주문의 isReviewed 업데이트
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    order.isReviewed = true;
+    await order.save();
+
+
     res.status(201).json(newReview);
   } catch (error) {
-    console.error('Error while saving review:', error); // 추가된 에러 로그
+    console.error("Error while saving review:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
