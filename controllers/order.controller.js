@@ -4,6 +4,15 @@ const User = require("../models/User");
 const productController = require("./product.controller");
 const { randomStringGenerator } = require("../utils/randomStringGenerator");
 const PAGE_SIZE = 5;
+
+const membershipMileageRates = {
+  bronze: 0.01, // 1%
+  silver: 0.02, // 2%
+  gold: 0.03, // 3$
+  platinum: 0.04, // 4%
+  diamond: 0.05, // 5%
+};
+
 orderController.createOrder = async (req, res) => {
   try {
     // 프론트앤드에서 데이터 보낸거 받아와서 userId,totalPrice,shipTo,contact,orderList
@@ -29,8 +38,14 @@ orderController.createOrder = async (req, res) => {
       throw new Error(errorMessage);
     }
 
+    const user = await User.findById(userId).select("membership mileage");
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const { membership, mileage: userMileage } = user;
+
     const lastPrice = totalPrice - useMileage;
-    console.log(useMileage, currentMileage, lastPrice);
     // order를 만들기
     const newOrder = new Order({
       userId,
@@ -46,10 +61,11 @@ orderController.createOrder = async (req, res) => {
     await newOrder.save();
     // 마일리지 적립
     if (useMileage == 0) {
-      const mileageToAdd = Math.floor(totalPrice * 0.05); // 소수점 제거
+      const mileageRate = membershipMileageRates[membership] || 0.01; // 기본값 bronze
+      const mileageToAdd = Math.floor(totalPrice * mileageRate); // 소수점 제거
       await User.updateOne(
-        { _id: userId }, // 조건: 해당 유저 ID
-        { $inc: { mileage: mileageToAdd } } // mileage 필드에 적립금 추가
+        { _id: userId },
+        { $inc: { mileage: mileageToAdd } } // 마일리지 적립
       );
     } else if (useMileage != 0) {
       const afterMileage = currentMileage - useMileage;
