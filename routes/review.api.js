@@ -1,10 +1,8 @@
 
-
-
 // review.api.js
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
+// const multer = require('multer');
 const path = require('path');
 const reviewController = require('../controllers/review.controller');
 
@@ -13,19 +11,19 @@ const reviewController = require('../controllers/review.controller');
 //uploads 만듦.
 
 //멀터 사용해서 이미지 업로드
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads')); // 파일 저장 경로 설정
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, path.join(__dirname, '../uploads')); // 파일 저장 경로 설정
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, `${Date.now()}-${file.originalname}`);
+//   },
+// });
 
-const upload = multer({ storage });
+// const upload = multer({ storage });
 
 // Routes
-router.post('/', upload.single('image'), reviewController.createReview);
+router.post('/', reviewController.createReview);
 router.get('/:productId', reviewController.getReviews);
 router.delete('/:reviewId', reviewController.deleteReview);
 

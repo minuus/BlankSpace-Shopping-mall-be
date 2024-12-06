@@ -3,29 +3,31 @@
 // review.controller.js
 const Review = require('../models/Review');
 
-//createReview로 리뷰생성해줌(저장)
-exports.createReview = async (req, res) => {
-  try {
-    const { productId, rating, text } = req.body; //리뷰데이터 3가지
-    const image = req.file ? req.file.path : null; //이미지 업로드
+// createReview로 리뷰생성해줌(저장)
+// exports.createReview = async (req, res) => {
+//   try {
+//     const { productId, rating, text } = req.body; //리뷰데이터 3가지
+//     const image = req.file ? req.file.path : null; //이미지 업로드
 
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
-    }
+//     if (rating < 1 || rating > 5) {
+//       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+//     }
 
-    const newReview = new Review({
-      productId,
-      rating,
-      text,
-      image,
-    });
+//     console.log('body: ', req.body)
 
-    await newReview.save();
-    res.status(201).json(newReview);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+//     const newReview = new Review({
+//       productId,
+//       rating,
+//       text,
+//       image,
+//     });
+
+//     await newReview.save();
+//     res.status(201).json(newReview);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 //리뷰조회기능임
 exports.getReviews = async (req, res) => {
@@ -56,8 +58,7 @@ exports.createReview = async (req, res) => {
     console.log('Received data:', req.body);
     console.log('Received file:', req.file);
 
-    const { productId, rating, text } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : null;
+    const { productId, rating, text, name } = req.body;
 
     // 데이터 형식 점검: rating을 숫자로 변환
     const parsedRating = parseInt(rating, 10);
@@ -69,7 +70,7 @@ exports.createReview = async (req, res) => {
       productId,
       rating: parsedRating,
       text,
-      image,
+      name
     });
 
     await newReview.save();
