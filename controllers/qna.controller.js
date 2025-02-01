@@ -132,4 +132,36 @@ qnaController.updateQnA = async (req, res) => {
   }
 };
 
+
+qnaController.getQnAsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params; // URL에서 userId 가져오기
+    const { page = 1, limit = 10 } = req.query;
+
+    // userId 기반으로 필터링
+    const cond = { user: userId };
+    const totalItemNum = await QnA.countDocuments(cond); // 조건에 맞는 문서 수
+    const totalPageNum = Math.ceil(totalItemNum / limit); // 전체 페이지 수 계산
+
+    // 조건에 맞는 데이터 가져오기
+    const userQnAs = await QnA.find(cond)
+      .populate("product", "name") // 제품 정보 가져오기
+      .populate("user", "name")   // 사용자 이름 가져오기
+      .skip((page - 1) * limit)  // 페이지네이션
+      .limit(Number(limit))      // 제한된 항목 수
+      .sort({ createdAt: -1 });  // 최신순 정렬
+
+    res.status(200).json({
+      status: "success",
+      data: userQnAs,
+      totalItemNum,
+      totalPageNum,
+      currentPage: Number(page),
+    });
+  } catch (error) {
+    res.status(500).json({ status: "fail", error: error.message });
+  }
+};
+
+
 module.exports = qnaController;
