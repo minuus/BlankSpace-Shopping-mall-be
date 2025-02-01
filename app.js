@@ -8,6 +8,7 @@ const app = express();
 const userRouter = require("./routes/user.api"); // user 라우터(추가)
 
 
+
 require("dotenv").config();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -26,6 +27,6 @@ mongoose
   .then(() => console.log("mongoose connected"))
   .catch((err) => console.log("DB connection fail", err));
 
-app.listen(process.env.PORT || 5001, () => {
+app.listen(process.env.PORT || 5000, () => {
   console.log("server on");
 });

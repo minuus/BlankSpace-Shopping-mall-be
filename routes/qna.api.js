@@ -13,6 +13,9 @@ router.post(
 // Q&A 목록 조회
 router.get("/", qnaController.getQnAs);
 router.get('/:id',qnaController.getQnAById)
+// 사용자별 Q&A 조회
+router.get("/user/:userId", authController.authenticate, qnaController.getQnAsByUser);
+
 
 // Q&A 수정
 router.put(
