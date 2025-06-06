@@ -43,6 +43,7 @@ exports.deleteReview = async (req, res) => {
 
 
 //에러 점검코드 추가함.
+//확인용
 exports.createReview = async (req, res) => {
   try {
     console.log('Received data:', req.body);
@@ -74,10 +75,11 @@ exports.createReview = async (req, res) => {
 
 exports.createNewReview = async (req, res) => {
   try{
-    const { productId, rating, text, name, orderId, image } = req.body;
+    const { productId, rating, text, name, orderId, image ,  imageUrls} = req.body;
 
     // 데이터 형식 점검: rating을 숫자로 변환
     const parsedRating = parseInt(rating, 10);
+    const imageList = imageUrls || image || [];
     if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -90,14 +92,14 @@ exports.createNewReview = async (req, res) => {
       rating: parsedRating,
       text,
       name,
-      imageUrls: image ? (Array.isArray(image) ? image : [image]) : []
+      imageUrls: Array.isArray(imageList) ? imageList : [imageList],
     });
     await newReview.save();
 
     const order = await Order.findById(orderId);
     const item = order.items.find(i => i.productId.toString() === productId);
-    if (item) {
-      item.isReviewed = true;
+    if (order) {
+      order.isReviewed = true;
       await order.save();
     }
     return res.status(201).json({ message: 'Review created successfully', review: newReview });

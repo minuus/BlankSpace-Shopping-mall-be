@@ -124,13 +124,10 @@ orderController.getOrder = async (req, res, next) => {
 
     // 주문 목록 쿼리
     const orderList = await Order.find(filterConditions).populate({
-      path: "items",
-      populate: {
-        path: "productId",
-        model: "Product",
-        select: "image name",
-      },
+      path: "items.productId",
+      select: "image name",
     });
+    console.log("🧪 orderList 확인:", JSON.stringify(orderList[0], null, 2));
 
     const totalItemNum = await Order.countDocuments(filterConditions);
     const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
