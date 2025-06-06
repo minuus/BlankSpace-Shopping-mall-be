@@ -43,6 +43,7 @@ exports.deleteReview = async (req, res) => {
 
 
 //에러 점검코드 추가함.
+//확인용
 exports.createReview = async (req, res) => {
   try {
     console.log('Received data:', req.body);
