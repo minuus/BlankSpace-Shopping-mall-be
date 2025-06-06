@@ -68,10 +68,9 @@ orderController.createOrder = async (req, res) => {
         { $inc: { mileage: mileageToAdd } } // 마일리지 적립
       );
     } else if (useMileage != 0) {
-      const afterMileage = currentMileage - useMileage;
       await User.updateOne(
         { _id: userId }, // 조건: 해당 유저 ID
-        { $set: { mileage: afterMileage }, $inc: { usedMileage: useMileage } } // mileage 필드에 적립금 추가
+        { $inc: { usedMileage: useMileage } } // mileage 필드에 적립금 추가
       );
     }
 

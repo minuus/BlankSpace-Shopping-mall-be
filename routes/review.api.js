@@ -23,8 +23,9 @@ const reviewController = require('../controllers/review.controller');
 // const upload = multer({ storage });
 
 // Routes
-router.post('/', reviewController.createReview);
+router.post('/', reviewController.createNewReview);
 router.get('/:productId', reviewController.getReviews);
 router.delete('/:reviewId', reviewController.deleteReview);
+router.get('/', reviewController.getAllReviews);
 
 module.exports = router;

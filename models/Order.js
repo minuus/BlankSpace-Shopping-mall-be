@@ -21,6 +21,7 @@ const orderSchema = Schema(
         size: { type: String, required: true },
       },
     ],
+    isReviewed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
