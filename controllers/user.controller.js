@@ -279,7 +279,7 @@ userController.addToWishlist = async (req, res) => {
 userController.getWishlistProducts = async (req, res) => {
   try {
     const { userId } = req; // auth 미들웨어에서 설정된 userId
-    const { page = 1, limit = 5 } = req.query;
+    const { page = 1, limit = 8 } = req.body; // 기본값을 8로 설정
 
     const user = await User.findById(userId);
     if (!user) {
@@ -288,25 +288,29 @@ userController.getWishlistProducts = async (req, res) => {
 
     const wishlistIds = user.wishlist;
     if (!wishlistIds || wishlistIds.length === 0) {
-      return res.status(200).json({ products: [] }); // 위시리스트가 비어있으면 빈 배열 반환
+      return res.status(200).json({ 
+        status: "success",
+        products: [],
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0
+      });
     }
-    // 페이지네이션 적용, 배열이라 find 말고 slice 함수 사용
+
+    // 페이지네이션 적용
     const totalItems = wishlistIds.length;
     const totalPages = Math.ceil(totalItems/limit);
     const skip = (parseInt(page) - 1) * limit;
     const pnWithIds = wishlistIds.slice(skip, skip + parseInt(limit));
-
-    // productController를 사용하여 제품 정보 가져오기
     
     const products = await productController.getProductsByIds(pnWithIds);
-  
 
     return res.status(200).json({ 
       status: "success", 
       products,
       currentPage: parseInt(page),
       totalPages,
-      totalItems, 
+      totalItems
     });
   } catch (error) {
     return res.status(500).json({ status: "error", error: error.message });
