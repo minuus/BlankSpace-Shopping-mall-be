@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 
 let PAGE_SIZE = 16;
 const productController = {};
@@ -251,6 +252,61 @@ productController.getProductsByIds = async (productIds) => {
   } catch (error) {
     console.error("제품을 가져오는 중 오류 발생:", error.message);
     throw new Error("Error fetching products by IDs");
+  }
+};
+
+productController.getProductsSortedBySales = async (req, res) => {
+  try {
+    const { category } = req.query;
+    
+    // 모든 상품 가져오기
+    const allProducts = await Product.find({ isDeleted: false });
+    
+    // 주문 데이터에서 상품별 판매량 집계
+    const orderAggregation = await Order.aggregate([
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.productId",
+          totalSales: { $sum: "$items.qty" }
+        }
+      }
+    ]);
+
+    // 판매량 데이터를 Map으로 변환
+    const salesMap = new Map(
+      orderAggregation.map(item => [item._id.toString(), item.totalSales])
+    );
+
+    // 모든 상품에 판매량 정보 추가
+    const productsWithSales = allProducts.map(product => {
+      const productObj = product.toObject();
+      return {
+        ...productObj,
+        sales: salesMap.get(product._id.toString()) || 0
+      };
+    });
+
+    // 카테고리 필터링
+    let filteredProducts = productsWithSales;
+    if (category && category !== "all") {
+      filteredProducts = productsWithSales.filter(product => 
+        product.category.includes(category.toLowerCase())
+      );
+    }
+
+    // 판매량 기준으로 정렬
+    filteredProducts.sort((a, b) => b.sales - a.sales);
+
+    // 응답 데이터 구성
+    const response = {
+      status: "success",
+      data: filteredProducts
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).json({ status: "fail", error: error.message });
   }
 };
 
