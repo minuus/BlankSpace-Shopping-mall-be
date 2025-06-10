@@ -46,29 +46,39 @@ exports.deleteReview = async (req, res) => {
 //확인용
 exports.createReview = async (req, res) => {
   try {
-    console.log('Received data:', req.body);
-    console.log('Received file:', req.file);
+    // console.log("Received data:", req.body);
 
-    const { productId, rating, text, name } = req.body;
+    const { productId, rating, text, name, orderId } = req.body;
 
-    // 데이터 형식 점검: rating을 숫자로 변환
+    // 유효성 검사
     const parsedRating = parseInt(rating, 10);
     if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
     }
 
+    // 리뷰 생성
     const newReview = new Review({
       productId,
       rating: parsedRating,
       text,
-      name
+      name,
     });
-
     await newReview.save();
-    console.log('Review saved:', newReview); // 데이터베이스에 저장된 리뷰 로그 추가
+
+    // console.log("Review saved:", newReview);
+
+    // 해당 주문의 isReviewed 업데이트
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    order.isReviewed = true;
+    await order.save();
+
+
     res.status(201).json(newReview);
   } catch (error) {
-    console.error('Error while saving review:', error); // 추가된 에러 로그
+    console.error("Error while saving review:", error);
     res.status(500).json({ message: error.message });
   }
 };
