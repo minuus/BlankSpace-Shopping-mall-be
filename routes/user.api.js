@@ -15,13 +15,19 @@ router.put("/update", authController.authenticate, userController.updateUserInfo
 router.post("/:id/wishlist", authController.authenticate, userController.addToWishlist);
 router.post("/wishlist/products", authController.authenticate, userController.getWishlistProducts);
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", authController.authenticate, async (req, res) => {
     console.log("요청 받은 ID:", req.params.id);
     console.log("요청 받은 데이터:", req.body);
     try {
       const { id } = req.params;
       const { level, membership } = req.body;
   
+      // 현재 로그인한 사용자가 admin인지 확인
+      const currentUser = await User.findById(req.userId);
+      if (!currentUser || currentUser.level !== "admin") {
+        return res.status(403).json({ message: "권한이 없습니다." });
+      }
+
       if (!level && !membership) {
         return res.status(400).json({ message: "업데이트할 필드가 없습니다." });
       }
