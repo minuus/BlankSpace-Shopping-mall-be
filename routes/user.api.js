@@ -19,17 +19,21 @@ router.put("/:id", async (req, res) => {
     console.log("요청 받은 ID:", req.params.id);
     console.log("요청 받은 데이터:", req.body);
     try {
-      const { id } = req.params; // 요청 경로에서 ID 추출
-      const { level } = req.body; // 요청 본문에서 level 추출
+      const { id } = req.params;
+      const { level, membership } = req.body;
   
-      if (!level) {
-        return res.status(400).json({ message: "Level 필드가 없습니다." });
+      if (!level && !membership) {
+        return res.status(400).json({ message: "업데이트할 필드가 없습니다." });
       }
+  
+      const updateData = {};
+      if (level) updateData.level = level;
+      if (membership) updateData.membership = membership;
   
       const updatedUser = await User.findByIdAndUpdate(
         id,
-        { level }, // level 업데이트
-        { new: true } // 업데이트 후 데이터를 반환하도록 설정
+        updateData,
+        { new: true }
       );
   
       if (!updatedUser) {
