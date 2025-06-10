@@ -38,6 +38,98 @@ userController.createUser = async (req, res) => {
 //   }
 // };
 
+userController.createOrLoginKakaoUser = async (kakaoProfile) => {
+  try {
+    // 카카오 프로필에서 필요한 정보 추출
+    const email = kakaoProfile._json?.kakao_account?.email || `kakao_${kakaoProfile.id}@example.com`;
+    const name = kakaoProfile.displayName || kakaoProfile._json?.properties?.nickname || "카카오 사용자";
+    
+    // 이미 가입된 사용자인지 확인 (이메일 또는 카카오 ID로)
+    let user = await User.findOne({ 
+      $or: [
+        { email },
+        { kakaoId: kakaoProfile.id }
+      ]
+    });
+
+    // 가입되지 않은 사용자라면 새로 생성
+    if (!user) {
+      // 랜덤 비밀번호 생성 (10자리)
+      const randomPassword = Math.random().toString(36).substring(2, 12);
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+      
+      user = new User({
+        email,
+        name,
+        password: hashedPassword,
+        provider: 'kakao',
+        kakaoId: kakaoProfile.id,
+        level: "customer"
+      });
+      
+      await user.save();
+    } else if (!user.kakaoId) {
+      // 이메일은 같지만 카카오 연동이 안된 계정이면 kakaoId 추가
+      user.kakaoId = kakaoProfile.id;
+      user.provider = user.provider || 'kakao';
+      await user.save();
+    }
+    
+    return user;
+  } catch (error) {
+    console.error("카카오 회원가입 에러:", error);
+    throw error;
+  }
+};
+
+
+userController.createOrLoginNaveroUser = async (naverProfile) => {
+  try {
+    // 카카오 프로필에서 필요한 정보 추출
+    const email = naverProfile._json?.kakao_account?.email || `kakao_${naverProfile.id}@example.com`;
+    const name = naverProfile.displayName || naverProfile._json?.properties?.nickname || "카카오 사용자";
+    
+    // 이미 가입된 사용자인지 확인 (이메일 또는 카카오 ID로)
+    let user = await User.findOne({ 
+      $or: [
+        { email },
+        { kakaoId: naverProfile.id }
+      ]
+    });
+
+    // 가입되지 않은 사용자라면 새로 생성
+    if (!user) {
+      // 랜덤 비밀번호 생성 (10자리)
+      const randomPassword = Math.random().toString(36).substring(2, 12);
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+      
+      user = new User({
+        email,
+        name,
+        password: hashedPassword,
+        provider: 'naver',
+        naverId: naverProfile.id,
+        level: "customer"
+      });
+      
+      await user.save();
+    } else if (!user.naverId) {
+      // 이메일은 같지만 네이버 연동이 안된 계정이면 naverId 추가
+      user.naverId = naverProfile.id;
+      user.provider = user.provider || 'naver';
+      await user.save();
+    }
+    
+    return user;
+  } catch (error) {
+    console.error("네이버 회원가입 에러:", error);
+    throw error;
+  }
+};
+
+
 
 // TODO: 수정된 getUser 컨트롤러. 비밀번호를 제외하고 넘겨줌. 보안 문제 해결
 userController.getUser = async (req, res) => {
@@ -187,6 +279,7 @@ userController.addToWishlist = async (req, res) => {
 userController.getWishlistProducts = async (req, res) => {
   try {
     const { userId } = req; // auth 미들웨어에서 설정된 userId
+    const { page = 1, limit = 8 } = req.body; // 기본값을 8로 설정
 
     const user = await User.findById(userId);
     if (!user) {
@@ -195,14 +288,30 @@ userController.getWishlistProducts = async (req, res) => {
 
     const wishlistIds = user.wishlist;
     if (!wishlistIds || wishlistIds.length === 0) {
-      return res.status(200).json({ products: [] }); // 위시리스트가 비어있으면 빈 배열 반환
+      return res.status(200).json({ 
+        status: "success",
+        products: [],
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0
+      });
     }
 
-    // productController를 사용하여 제품 정보 가져오기
-    const products = await productController.getProductsByIds(wishlistIds);
-  
+    // 페이지네이션 적용
+    const totalItems = wishlistIds.length;
+    const totalPages = Math.ceil(totalItems/limit);
+    const skip = (parseInt(page) - 1) * limit;
+    const pnWithIds = wishlistIds.slice(skip, skip + parseInt(limit));
+    
+    const products = await productController.getProductsByIds(pnWithIds);
 
-    return res.status(200).json({ status: "success", products });
+    return res.status(200).json({ 
+      status: "success", 
+      products,
+      currentPage: parseInt(page),
+      totalPages,
+      totalItems
+    });
   } catch (error) {
     return res.status(500).json({ status: "error", error: error.message });
   }

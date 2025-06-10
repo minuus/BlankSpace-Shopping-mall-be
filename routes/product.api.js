@@ -11,6 +11,7 @@ router.post(
 );
 
 router.get("/", productController.getProducts);
+router.get("/products-sorted-by-sales", productController.getProductsSortedBySales);
 router.put(
   "/:id",
   authController.authenticate,
