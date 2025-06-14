@@ -106,7 +106,7 @@ productController.createProduct = async (req, res) => {
 
 productController.getProducts = async (req, res) => {
   try {
-    const { page = 1, name, category, admin = 0 } = req.query; // 기본 페이지 값 설정
+    const { page = 1, name, category, admin = 0, sortBy = "createdAt", sortOrder = "desc" } = req.query; // 정렬 기준 추가
     PAGE_SIZE = admin == 1 ? 5 : 16;
 
     let response = { status: "success" };
@@ -128,8 +128,15 @@ productController.getProducts = async (req, res) => {
       };
     }
 
+    // 정렬 기준 설정
+    const sortOptions = {
+      createdAt: { createdAt: sortOrder === "asc" ? 1 : -1 },
+      price: { price: sortOrder === "asc" ? 1 : -1 }
+    };
+
     // 쿼리 생성 및 페이지네이션 적용
     let query = Product.find(cond)
+      .sort(sortOptions[sortBy] || sortOptions.createdAt)
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE);
     const totalItemNum = await Product.countDocuments(cond);
