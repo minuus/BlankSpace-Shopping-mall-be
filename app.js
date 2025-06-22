@@ -34,8 +34,20 @@ app.use(cors({
   origin: 'http://localhost:3000', // 프론트엔드 주소
   credentials: true
 }));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json()); // req.body가 객체로 인식이 됩니다
+
+// STT 경로는 body-parser를 건너뛰도록 설정
+app.use((req, res, next) => {
+  if (req.path === '/api/llm/stt' && req.method === 'POST') {
+    // STT 경로는 body-parser를 건너뜀
+    next();
+  } else {
+    // 다른 경로는 body-parser 적용
+    bodyParser.urlencoded({ extended: false })(req, res, () => {
+      bodyParser.json()(req, res, next);
+    });
+  }
+});
+
 app.use(passport.initialize()); // passport 미들웨어 초기화
 app.use('/api/llm', llmApiRouter); // AI 프록시 라우터 등록
 app.use("/api", indexRouter);
