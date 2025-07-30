@@ -25,7 +25,31 @@ productController.createProduct = async (req, res) => {
       height,
       weight,
       washMethods,
+      aiExtractedInfo,
+      aiAnalysis,
+      clipFeatures
     } = req.body;
+    
+    console.log('📥 받은 요청 데이터:', {
+      sku, name, category, price, height, weight,
+      stock: stock ? Object.keys(stock) : '없음',
+      aiExtractedInfo: aiExtractedInfo ? '있음' : '없음',
+      aiAnalysis: aiAnalysis ? '있음' : '없음',
+      clipFeatures: clipFeatures ? {
+        imageVectorsCount: clipFeatures.imageVectors ? clipFeatures.imageVectors.length : 0,
+        averageVectorLength: clipFeatures.averageVector ? clipFeatures.averageVector.length : 0,
+        vectorDimension: clipFeatures.vectorDimension
+      } : '없음'
+    });
+    
+    // 재고 데이터 검증
+    if (!stock || typeof stock !== 'object' || Object.keys(stock).length === 0) {
+      return res.status(400).json({ 
+        status: "fail", 
+        error: "유효한 재고 정보가 필요합니다." 
+      });
+    }
+    
     const product = new Product({
       sku,
       name,
@@ -39,10 +63,26 @@ productController.createProduct = async (req, res) => {
       height,
       weight,
       washMethods,
+      aiExtractedInfo,
+      aiAnalysis,
+      clipFeatures
     });
+    
+    console.log('💾 저장할 상품 데이터:', {
+      stock: Object.keys(product.stock),
+      aiExtractedInfo: product.aiExtractedInfo ? '있음' : '없음',
+      aiAnalysis: product.aiAnalysis ? '있음' : '없음',
+      clipFeatures: product.clipFeatures ? {
+        imageVectorsCount: product.clipFeatures.imageVectors ? product.clipFeatures.imageVectors.length : 0,
+        averageVectorLength: product.clipFeatures.averageVector ? product.clipFeatures.averageVector.length : 0,
+        vectorDimension: product.clipFeatures.vectorDimension
+      } : '없음'
+    });
+    
     await product.save();
     res.status(200).json({ status: "success", product });
   } catch (error) {
+    console.error('❌ 상품 생성 오류:', error);
     res.status(400).json({ status: "fail", error: error.message });
   }
 };
@@ -171,38 +211,26 @@ productController.deleteProduct = async (req, res) => {
   }
 };
 
-productController.updateProduct = async (req, res) => {
+productController.editProduct = async (req, res) => {
   try {
     const productId = req.params.id;
-    const {
-      sku,
-      name,
-      size,
-      image,
-      price,
-      description,
-      category,
-      stock,
-      status,
-      height,
-      weight,
-      washMethods,
-    } = req.body;
-
+    const { sku, name, size, image, price, description, category, stock, status, height, weight, washMethods, aiExtractedInfo, aiAnalysis, clipFeatures } = req.body;
     const product = await Product.findByIdAndUpdate(
       { _id: productId },
-      { sku, name, size, image, price, description, category, stock, status ,height,
-        weight,washMethods,},
+      { sku, name, size, image, price, description, category, stock, status, height, weight, washMethods, aiExtractedInfo, aiAnalysis, clipFeatures },
       { new: true }
     );
-    if (!product) throw new Error("Item doesn't exist");
-    res.status(200).json({ status: "success", data: product });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.status(200).json({ message: "Product updated successfully", product });
   } catch (error) {
-    res.status(400).json({ status: "fail", error: error.message });
+    console.error("Error updating product:", error);
+    res.status(500).json({ message: "Error updating product", error: error.message });
   }
 };
 
-productController.getProductById = async (req, res) => {
+productController.getProductDetail = async (req, res) => {
   try {
     const productId = req.params.id;
     const product = await Product.findById(productId);
